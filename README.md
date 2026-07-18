@@ -128,6 +128,12 @@ The server speaks MCP over stdio only — there is no listening port. Point
 your MCP client (Claude Code, Codex, or any other MCP-speaking assistant) at
 the built binary or image the way you would any other stdio MCP server.
 
+## Releasing a new version
+
+Maintainers: see [`RELEASE.md`](RELEASE.md) — the short version is `make
+publish`, always run manually, never triggered by any CI or by `cmdop_go`'s
+own release.
+
 ## Relay address
 
 By default `cmdop-care` dials the local embedded cmdop relay on loopback
