@@ -6,6 +6,11 @@
 FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS build
 ARG TARGETOS
 ARG TARGETARCH
+# VERSION is passed by release/publish.sh (`--build-arg VERSION=$(cat VERSION)`)
+# so the shipped binary reports the exact tag it was built and pushed as —
+# the VERSION file remains the single source of truth, not a second
+# hardcoded constant in main.go.
+ARG VERSION=dev
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -15,7 +20,8 @@ COPY . .
 # a correct native binary for each manifest in the resulting image index —
 # never hardcode GOARCH here (a prior amd64-only build shipped a mismatched
 # binary inside an arm64-labeled manifest on an Apple Silicon build host).
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/cmdop-care .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
+    -ldflags="-s -w -X main.version=${VERSION}" -o /out/cmdop-care .
 
 # Runtime stage: distroless static base — no shell, no package manager, no
 # unnecessary packages.

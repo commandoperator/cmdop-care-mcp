@@ -27,8 +27,12 @@ import (
 )
 
 // version is the exact, immutable artifact version. Never "latest" — see
-// publication-blueprint-2026-07-18.md.
-const version = "0.1.0"
+// publication-blueprint-2026-07-18.md. The VERSION file is the single source
+// of truth; release/publish.sh stamps this at build time via
+// `-ldflags "-X main.version=$(cat VERSION)"` so the running binary always
+// reports the version it was actually tagged/pushed as. This default is only
+// what a plain `go build`/`make build` (no ldflags) reports locally.
+var version = "dev"
 
 // relayAddrEnv optionally overrides the relay dial target (default:
 // relay.DefaultAddr, the local embedded relay on loopback). This is a

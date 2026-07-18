@@ -30,12 +30,15 @@ fi
 
 GHCR_USER="${GHCR_USER:-commandoperator}"
 IMAGE="ghcr.io/commandoperator/cmdop-care"
-VERSION="$(cat VERSION)"
-TAG="${VERSION}"
+TAG="$(cat VERSION)"
+# server.json / main.go's stamped version omit the git-tag "v" prefix
+# (matches server.json's "version": "0.1.1"); TAG keeps it (matches the git
+# tag and the ghcr.io image tag, e.g. v0.1.1).
+BUILD_VERSION="${TAG#v}"
 PLATFORMS="linux/amd64,linux/arm64"
 
 echo "== cmdop-care-mcp release =="
-echo "version:   ${VERSION}"
+echo "version:   ${BUILD_VERSION}"
 echo "image:     ${IMAGE}:${TAG}"
 echo "platforms: ${PLATFORMS}"
 echo "dry-run:   ${DRY_RUN}"
@@ -47,7 +50,7 @@ go vet ./...
 go test ./...
 
 echo "-- docker build (local, native platform only — for the non-root/label check below) --"
-docker build -t "${IMAGE}:${TAG}" .
+docker build --build-arg "VERSION=${BUILD_VERSION}" -t "${IMAGE}:${TAG}" .
 
 echo "-- verify non-root + label (never skip this) --"
 actual_user="$(docker inspect "${IMAGE}:${TAG}" --format='{{.Config.User}}')"
@@ -83,7 +86,7 @@ echo "-- docker buildx push (multi-arch: ${PLATFORMS}) --"
 # buildx --platform ... --push builds each requested platform natively (via
 # QEMU where cross-compiling the final stage's distroless base) and pushes a
 # single multi-platform image index in one step.
-docker buildx build --platform "${PLATFORMS}" -t "${IMAGE}:${TAG}" --push .
+docker buildx build --platform "${PLATFORMS}" --build-arg "VERSION=${BUILD_VERSION}" -t "${IMAGE}:${TAG}" --push .
 
 echo "-- verify the pushed multi-arch index (anonymous, no credentials) --"
 docker logout ghcr.io >/dev/null 2>&1 || true
