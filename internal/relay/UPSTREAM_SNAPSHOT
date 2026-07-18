@@ -1,0 +1,19 @@
+# Pinned checksums of the internal cmdop_go source cmdop-care-mcp's tool
+# descriptions, schemas, and DTOs are modeled on. Compared by
+# cmdop_go/go/scripts/check-cmdop-care-drift.sh at the end of `make release`.
+#
+# Regenerate deliberately (never silently) after reviewing whether
+# cmdop-care-mcp's own vendored tool logic/DTOs need a matching update:
+#
+#   cd projects/solution/cmdop_go/go
+#   shasum -a 256 internal/mcp/tools/fleet_care.go internal/mcp/tools/fleet.go \
+#     core/agent/ports/machinecare.go
+#
+# then paste the new hashes below and commit both this file and any
+# corresponding change to internal/relay/types.go / internal/tools/tools.go
+# in cmdop-care-mcp.
+#
+# snapshot date: 2026-07-18
+4e4df0fb56829705eb3d11d9d754bffa445d4154acf53f78c74b96625d9ef2df  internal/mcp/tools/fleet_care.go
+95786b5cfce703911df0ef04564cbc798a6ef6083cf28731d6344ba3fcf0ac5d  internal/mcp/tools/fleet.go
+4311c4b335c82312e9be8474d4c9aba63ecf9c0d0cab71a5b553339317b2f4a3  core/agent/ports/machinecare.go
