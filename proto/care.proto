@@ -1,0 +1,261 @@
+// Minimal wire contract for the cmdop-care MCP artifact.
+//
+// This is a DELIBERATELY TRIMMED subset of the private cmdop_go monorepo's
+// `cmdop.agent.v1` proto package (proto/agentv1/service/{care,ai_agent,session}.proto).
+// It carries only the messages and RPCs the 4 read-only tools in this
+// artifact need:
+//   - AiAgentService.GetMachineCare              (care_status)
+//   - AiAgentService.RunMachineCareDiagnostic     (care_diagnose)
+//   - SessionService.ListSessions                  (list_machines)
+//
+// It intentionally OMITS every mutation / exec / delegation RPC (RunAgent,
+// CancelAgent, Extract, CreateSession, CloseSession, and the Care action
+// propose/decision messages) — this artifact never calls them and does not
+// even generate stubs for them, so there is no code path that could.
+//
+// Wire-compatible with the private relay: field numbers below match the
+// source-of-truth proto exactly, so this client interoperates with any
+// cmdop relay speaking cmdop.agent.v1, but this file is maintained here
+// independently (it is not regenerated from the private monorepo).
+
+syntax = "proto3";
+
+package cmdop.care.v1;
+
+option go_package = "github.com/commandoperator/cmdop-care-mcp/internal/carepb;carepb";
+
+import "google/protobuf/timestamp.proto";
+
+// ============================================================================
+// Care projections (read-only, bounded, privacy-safe by construction)
+// ============================================================================
+
+message CareCapabilities {
+  bool remote_diagnostic_supported = 1;
+}
+
+message CareFact {
+  string code = 1;
+  int64 value = 2;
+  string unit = 3;
+  string coverage = 4;
+  string reason_code = 5;
+  int64 captured_at_unix_ms = 6;
+}
+
+message CareFactDomain {
+  string code = 1;
+  string coverage = 2;
+  string reason_code = 3;
+  int64 captured_at_unix_ms = 4;
+  repeated CareFact facts = 5;
+}
+
+message CareFactsSnapshot {
+  uint32 schema_version = 1;
+  int64 collected_at_unix_ms = 2;
+  repeated CareFactDomain domains = 3;
+}
+
+message CareStorageSource {
+  string source_code = 1;
+  uint32 source_version = 2;
+  string class = 3;
+  uint64 logical_bytes = 4;
+  optional uint64 reported_allocated_bytes = 5;
+  optional uint64 estimated_reclaim_bytes = 6;
+  string estimation_quality = 7;
+  string coverage = 8;
+  string reason_code = 9;
+  string eligibility = 10;
+}
+
+message CareStorageSnapshot {
+  uint32 schema_version = 1;
+  int64 captured_at_unix_ms = 2;
+  int64 finished_at_unix_ms = 3;
+  string coverage = 4;
+  string reason_code = 5;
+  repeated CareStorageSource sources = 6;
+}
+
+message CareTerminalScan {
+  string policy_version = 1;
+  string capability_version = 2;
+  string terminal_state = 3;
+  string coverage = 4;
+  string reason_code = 5;
+  int64 finished_at_unix_ms = 6;
+}
+
+message CareFinding {
+  string projection_id = 1;
+  string rule_code = 2;
+  string rule_version = 3;
+  string domain = 4;
+  string presentation_code = 5;
+  string next_step_code = 6;
+  string severity = 7;
+  string coverage = 8;
+  string reason_code = 9;
+  uint64 revision = 10;
+  string last_transition = 11;
+  int64 transition_at_unix_ms = 12;
+}
+
+message CareSnapshot {
+  uint32 schema_version = 1;
+  string source_instance_id = 2;
+  uint64 source_generation = 3;
+  CareTerminalScan latest_scan = 4;
+  repeated CareFinding findings = 5;
+  CareFactsSnapshot latest_facts = 6;
+  CareStorageSnapshot latest_storage_inventory = 7;
+  CareCapabilities capabilities = 8;
+}
+
+// CareDiagnostic mirrors the local diagnostic privacy allowlist: no command
+// lines, paths, users, environment, registry values, or startup configuration
+// contents. Raw process PID and process name ARE present (see
+// CareProcessAttribution) — this is a deliberate, disclosed part of the
+// contract; see this artifact's README and the care_diagnose tool description.
+message CareDiagnostic {
+  uint32 schema_version = 1;
+  string scan_run_id = 2;
+  int64 capture_started_at_unix_ms = 3;
+  int64 capture_finished_at_unix_ms = 4;
+  string trigger_code = 5;
+  string coverage = 6;
+  string reason_code = 7;
+  CareProcessDiagnostic processes = 8;
+  CareStartupDiagnostic startup = 9;
+}
+
+message CareProcessDiagnostic {
+  string coverage = 1;
+  string reason_code = 2;
+  uint32 examined_count = 3;
+  uint32 retained_count = 4;
+  bool truncated = 5;
+  repeated CareProcessAttribution entries = 6;
+}
+
+message CareProcessAttribution {
+  int32 pid = 1;
+  int64 started_at_unix_ms = 2;
+  string name = 3;
+  int64 cpu_milli_percent = 4;
+  uint64 rss_bytes = 5;
+  bool cpu_leader = 6;
+  bool rss_leader = 7;
+  string candidate_id = 8;
+}
+
+message CareStartupDiagnostic {
+  string coverage = 1;
+  string reason_code = 2;
+  uint32 examined_count = 3;
+  uint32 retained_count = 4;
+  bool truncated = 5;
+  repeated CareStartupSource sources = 6;
+}
+
+message CareStartupSource {
+  string source_code = 1;
+  string scope = 2;
+  string coverage = 3;
+  string reason_code = 4;
+  uint32 examined_count = 5;
+  uint32 retained_count = 6;
+  bool truncated = 7;
+  repeated CareStartupEntry entries = 8;
+}
+
+message CareStartupEntry {
+  string id = 1;
+  string label = 2;
+  string source_code = 3;
+  string scope = 4;
+  string kind = 5;
+}
+
+// ============================================================================
+// AiAgentService — trimmed to the 2 read-only Care RPCs this artifact uses.
+// ============================================================================
+
+service AiAgentService {
+  // Typed, read-only last-known Care projection for one enrolled machine.
+  rpc GetMachineCare (GetMachineCareRequest) returns (GetMachineCareResponse);
+
+  // Typed, bounded live diagnostic. The relay enforces liveness, capability,
+  // policy, and the target PIN before dispatching the Care command.
+  rpc RunMachineCareDiagnostic (RunMachineCareDiagnosticRequest) returns (RunMachineCareDiagnosticResponse);
+}
+
+message GetMachineCareRequest {
+  string machine = 1;
+}
+
+message GetMachineCareResponse {
+  string machine_id = 1;
+  bool reported = 2;
+  CareSnapshot snapshot = 3;
+}
+
+message RunMachineCareDiagnosticRequest {
+  string machine = 1;
+  string machine_pin = 2;
+}
+
+message RunMachineCareDiagnosticResponse {
+  string machine_id = 1;
+  CareDiagnostic diagnostic = 2;
+}
+
+// ============================================================================
+// SessionService — trimmed to ListSessions (list_machines' data source).
+// ============================================================================
+
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ONLINE = 1;
+  SESSION_STATUS_OFFLINE = 2;
+}
+
+service SessionService {
+  rpc ListSessions (ListSessionsRequest) returns (ListSessionsResponse);
+}
+
+message SessionInfo {
+  string session_id = 1;
+  string fleet_id = 2;
+  string machine_id = 3;
+  reserved 4, 5;
+  reserved "machine_hostname", "machine_name";
+  string display_name = 6;
+  SessionStatus status = 7;
+  string os = 8;
+  string agent_version = 9;
+  bool has_shell = 10;
+  string shell = 11;
+  string working_directory = 12;
+  int64 heartbeat_age_seconds = 13;
+  google.protobuf.Timestamp connected_at = 14;
+  google.protobuf.Timestamp last_heartbeat_at = 15;
+  google.protobuf.Timestamp created_at = 16;
+  string public_url = 17;
+}
+
+message ListSessionsRequest {
+  string fleet_id = 1;
+  string machine_id = 2;
+  string display_name = 3;
+  SessionStatus status = 4;
+  int32 page_size = 5;
+  string page_token = 6;
+}
+
+message ListSessionsResponse {
+  repeated SessionInfo sessions = 1;
+  string next_page_token = 2;
+}

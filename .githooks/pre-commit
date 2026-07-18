@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+blocked_files="$({
+  git diff --cached --name-only --diff-filter=ACMR
+} | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key|p12|pfx)|credentials\.json$)' \
+  | grep -vE '(^|/)\.env\.example$' || true)"
+
+if [[ -n "${blocked_files}" ]]; then
+  echo "Commit blocked: sensitive file names are staged:" >&2
+  echo "${blocked_files}" >&2
+  exit 1
+fi
+
+added_lines="$(git diff --cached --no-ext-diff --unified=0 \
+  | grep '^+' \
+  | grep -v '^+++' || true)"
+
+if grep -Eq '([s]k-cmdop-[A-Za-z0-9_-]{16,}|[s]k-[A-Za-z0-9_-]{20,}|cmdop_live_[A-Za-z0-9_-]{20,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' \
+  <<<"${added_lines}"; then
+  echo "Commit blocked: a probable API key or private key is staged." >&2
+  exit 1
+fi
