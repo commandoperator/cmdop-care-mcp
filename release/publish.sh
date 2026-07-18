@@ -32,11 +32,13 @@ GHCR_USER="${GHCR_USER:-commandoperator}"
 IMAGE="ghcr.io/commandoperator/cmdop-care"
 VERSION="$(cat VERSION)"
 TAG="${VERSION}"
+PLATFORMS="linux/amd64,linux/arm64"
 
 echo "== cmdop-care-mcp release =="
-echo "version: ${VERSION}"
-echo "image:   ${IMAGE}:${TAG}"
-echo "dry-run: ${DRY_RUN}"
+echo "version:   ${VERSION}"
+echo "image:     ${IMAGE}:${TAG}"
+echo "platforms: ${PLATFORMS}"
+echo "dry-run:   ${DRY_RUN}"
 echo
 
 echo "-- build --"
@@ -44,7 +46,7 @@ go build ./...
 go vet ./...
 go test ./...
 
-echo "-- docker build --"
+echo "-- docker build (local, native platform only — for the non-root/label check below) --"
 docker build -t "${IMAGE}:${TAG}" .
 
 echo "-- verify non-root + label (never skip this) --"
@@ -71,13 +73,25 @@ if [[ -z "${GHCR_TOKEN:-}" ]]; then
   exit 1
 fi
 
-echo "-- docker push --"
+echo "-- docker login --"
 echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-docker push "${IMAGE}:${TAG}"
+
+echo "-- docker buildx push (multi-arch: ${PLATFORMS}) --"
+# A plain `docker build`+`docker push` only ever produces ONE platform (the
+# build host's native arch) — that previously shipped an arm64-labeled image
+# index with no linux/amd64 manifest at all from an Apple Silicon build host.
+# buildx --platform ... --push builds each requested platform natively (via
+# QEMU where cross-compiling the final stage's distroless base) and pushes a
+# single multi-platform image index in one step.
+docker buildx build --platform "${PLATFORMS}" -t "${IMAGE}:${TAG}" --push .
+
+echo "-- verify the pushed multi-arch index (anonymous, no credentials) --"
+docker logout ghcr.io >/dev/null 2>&1 || true
+docker manifest inspect "${IMAGE}:${TAG}"
 
 echo "-- git tag + push --"
 git tag "${TAG}"
 git push origin "${TAG}"
 
 echo
-echo "== published ${IMAGE}:${TAG} + git tag ${TAG} =="
+echo "== published ${IMAGE}:${TAG} (${PLATFORMS}) + git tag ${TAG} =="

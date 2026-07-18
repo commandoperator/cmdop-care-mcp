@@ -3,12 +3,19 @@
 # Build stage: static Go binary, no CGO (matches the private cmdop_go house
 # rule of cross-OS, dependency-light builds — this module has zero cgo
 # dependency, confirmed by `go build ./...` with CGO_ENABLED=0 below).
-FROM golang:1.26-bookworm AS build
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS build
+ARG TARGETOS
+ARG TARGETARCH
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/cmdop-care .
+# TARGETOS/TARGETARCH are supplied by buildx per requested --platform, so a
+# single `docker buildx build --platform linux/amd64,linux/arm64 ...` produces
+# a correct native binary for each manifest in the resulting image index —
+# never hardcode GOARCH here (a prior amd64-only build shipped a mismatched
+# binary inside an arm64-labeled manifest on an Apple Silicon build host).
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/cmdop-care .
 
 # Runtime stage: distroless static base — no shell, no package manager, no
 # unnecessary packages.
