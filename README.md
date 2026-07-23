@@ -1,5 +1,9 @@
 # cmdop-care
 
+<p align="center">
+  <img src="assets/cmdop-care-read-only-diagnostics.png" alt="Read-only machine-care diagnostics: a central inspection relay connected to three machine nodes" width="900">
+</p>
+
 A small, read-only [Model Context Protocol](https://modelcontextprotocol.io)
 (MCP) stdio server exposing **4 read-only tools** over an already-enrolled
 [cmdop](https://cmdop.com) machine fleet: roster visibility, machine health,
