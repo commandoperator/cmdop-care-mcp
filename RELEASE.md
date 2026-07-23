@@ -85,7 +85,7 @@ unauthenticated push or falls back to a different credential source.
 
 ## Bumping the version
 
-Edit the `VERSION` file (currently `v0.1.0`) to the next version **before**
+Edit the `VERSION` file (currently `v0.1.2`) to the next version **before**
 running `make publish`. Registry publishes are immutable, so pick the version
 deliberately — this is not auto-incremented anywhere.
 

@@ -5,6 +5,15 @@ A small, read-only [Model Context Protocol](https://modelcontextprotocol.io)
 [cmdop](https://cmdop.com) machine fleet: roster visibility, machine health,
 one bounded live diagnostic, and cmdop-owned storage usage.
 
+**Published:** [`io.github.commandoperator/cmdop-care`](https://registry.modelcontextprotocol.io/?q=io.github.commandoperator%2Fcmdop-care)
+· **Current version:** `v0.1.2` · **License:** Apache-2.0
+
+If you already use cmdop on a machine, this is the conservative MCP entry
+point: connect an MCP-aware assistant to read fleet health without exposing a
+shell, arbitrary file reads, or open-ended machine delegation. The host must
+already be enrolled; credentials stay in the host operating system keyring.
+For broader machine operations, use the main cmdop MCP server instead.
+
 This is **not** the full cmdop MCP surface. It intentionally omits
 `ask_machine`, `run_command`, `read_file`, and `list_dir` — every tool that
 executes a command, reads an arbitrary file, or delegates an open-ended task
@@ -120,8 +129,8 @@ Or via Docker (after resolving and pinning the base image digest — see the
 `<PIN-BEFORE-BUILD>` comment in `Dockerfile`):
 
 ```bash
-docker build -t cmdop-care:0.1.0 .
-docker run --rm -i cmdop-care:0.1.0
+docker build -t cmdop-care:0.1.2 .
+docker run --rm -i cmdop-care:0.1.2
 ```
 
 The server speaks MCP over stdio only — there is no listening port. Point
@@ -145,7 +154,7 @@ credential.
 
 | `cmdop-care` version | Compatible cmdop relay wire contract |
 |---|---|
-| `v0.1.0` | `AiAgentService.GetMachineCare` / `RunMachineCareDiagnostic` / roster-list shape as of 2026-07-18 |
+| `v0.1.2` | `AiAgentService.GetMachineCare` / `RunMachineCareDiagnostic` / roster-list shape as of 2026-07-18 |
 
 ## Contributing to this repository
 
