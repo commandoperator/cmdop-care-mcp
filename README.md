@@ -137,6 +137,12 @@ The server speaks MCP over stdio only — there is no listening port. Point
 your MCP client (Claude Code, Codex, or any other MCP-speaking assistant) at
 the built binary or image the way you would any other stdio MCP server.
 
+For AI-client setup notes, including a minimal MCP JSON configuration and first
+prompt, see [`llms-install.md`](llms-install.md).
+
+For marketplace submissions that require a square logo image, use the canonical
+400×400 PNG in [`assets/cmdop-care-400.png`](assets/cmdop-care-400.png).
+
 ## Releasing a new version
 
 Maintainers: see [`RELEASE.md`](RELEASE.md) — the short version is `make
