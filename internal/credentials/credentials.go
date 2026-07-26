@@ -5,7 +5,7 @@
 // a relay token via an environment variable or a mounted secret as a primary
 // path, and does NOT talk to Django or any OAuth/device-flow endpoint. It
 // requires the host machine to already be enrolled via the main `cmdop` CLI
-// (`cmdop enroll <enrollment-password>`), and reads that CLI's own
+// (`cmdop join <join-key>`), and reads that CLI's own
 // keyring-backed relay token and per-machine PIN store directly.
 //
 // This intentionally duplicates (rather than imports) two narrow slices of
@@ -54,18 +54,18 @@ const keyringService = "cmdop"
 // is NOT read by this artifact. That storage layout binds a token to a
 // specific server slug chosen at `cmdop login` time, which this artifact
 // has no way to discover without depending on cmdop's config package. The
-// common case — a single enrolled fleet via `cmdop enroll` — always uses
+// common case — a single enrolled fleet via `cmdop join` — always uses
 // the per-mode key below and works correctly.
 const tokenKey = "token_prod"
 
 // ErrNotEnrolled is returned when no relay token is found in the keyring —
-// the expected state on a host that has not run `cmdop enroll`.
-var ErrNotEnrolled = errors.New("cmdop-care: no relay token in the OS keyring — run `cmdop enroll <enrollment-password>` on this host first")
+// the expected state on a host that has not run `cmdop join`.
+var ErrNotEnrolled = errors.New("cmdop-care: no relay token in the OS keyring — run `cmdop join <join-key>` on this host first")
 
 // ErrExpiredToken is returned when a stored token has a non-zero expiry in
 // the past. cmdop-care never refreshes or re-mints a token (it has no
-// enrollment path); the fix is re-running `cmdop enroll` with the main CLI.
-var ErrExpiredToken = errors.New("cmdop-care: relay token expired — re-run `cmdop enroll <enrollment-password>` with the cmdop CLI")
+// enrollment path); the fix is re-running `cmdop join` with the main CLI.
+var ErrExpiredToken = errors.New("cmdop-care: relay token expired — re-run `cmdop join <join-key>` with the cmdop CLI")
 
 // token is the subset of the private repo's auth.Token JSON shape this
 // artifact needs. Decoding via a narrower struct is deliberate: unknown

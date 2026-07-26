@@ -115,8 +115,8 @@ func TestCareDiagnose_BackendUnavailableFallsBackCleanly(t *testing.T) {
 		t.Fatal("expected a plain not-enrolled text result, not an error result")
 	}
 	text := resultText(t, res)
-	if !strings.Contains(text, "cmdop enroll") {
-		t.Errorf("expected the not-enrolled message to mention `cmdop enroll`, got: %s", text)
+	if !strings.Contains(text, "cmdop join") {
+		t.Errorf("expected the not-enrolled message to mention `cmdop join`, got: %s", text)
 	}
 }
 

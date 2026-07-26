@@ -30,7 +30,7 @@ const CallTimeout = 15 * time.Second
 // notEnrolledMsg is returned whenever the relay client could not be built —
 // almost always because the host has no relay token in its OS keyring yet.
 const notEnrolledMsg = "cmdop-care requires an already-enrolled cmdop CLI on this host. " +
-	"Run `cmdop enroll <enrollment-password>` with the main cmdop CLI, then retry."
+	"Run `cmdop join <join-key>` with the main cmdop CLI, then retry."
 
 // Registry builds and registers the 4 approved tools against an MCP server.
 // dial is injected so tests can substitute a fake relay without a real
@@ -44,7 +44,7 @@ type Registry struct {
 // New builds a Registry. dial is called fresh on every tool invocation
 // (matching the private product's nil-safe / re-resolved-credential model)
 // rather than held open for the process lifetime, so a token that starts
-// working mid-session (the user runs `cmdop enroll` while cmdop-care is
+// working mid-session (the user runs `cmdop join` while cmdop-care is
 // already attached to an MCP client) is picked up on the next call.
 func New(dial func(ctx context.Context) (*relay.Client, error), limiter *ratelimit.Limiter) *Registry {
 	return &Registry{dial: dial, limiter: limiter}

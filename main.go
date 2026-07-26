@@ -5,7 +5,7 @@
 // implements.
 //
 // This binary requires the host machine to already be enrolled via the main
-// cmdop CLI (`cmdop enroll <enrollment-password>`). It reads that CLI's
+// cmdop CLI (`cmdop join <join-key>`). It reads that CLI's
 // existing OS-keyring-backed relay token and per-machine PIN cache; it does
 // NOT implement enrollment, does NOT accept a token via an environment
 // variable or mounted secret as a primary path, and holds no credential of

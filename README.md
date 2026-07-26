@@ -35,7 +35,7 @@ credential path. On startup it reads:
 
 - the relay OAuth/enrollment Bearer token the `cmdop` CLI already stored in
   the OS keyring (macOS Keychain / Linux Secret Service / Windows Credential
-  Manager) when you ran `cmdop enroll <enrollment-password>`;
+  Manager) when you ran `cmdop join <join-key>`;
 - any per-machine connection PIN the `cmdop` CLI has already cached in the
   same keyring (e.g. from a prior `cmdop connect`), for `care_diagnose` only.
 
