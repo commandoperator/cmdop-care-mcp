@@ -180,10 +180,9 @@ git config core.hooksPath .githooks
 This artifact went through an explicit threat-model and code-audit review
 before implementation (see the Cmdop organization's internal
 `security-architecture-2026-07-18.md` and `code-audit-2026-07-18.md`, referenced
-from this repository's delivery track). Report a security issue to
-**security@cmdop.com** (confirm this mailbox is live and monitored before
-relying on it — this repository's maintainers must verify that before
-publication).
+from this repository's delivery track). Report a security issue privately to
+**security@cmdop.com** — see [SECURITY.md](SECURITY.md) for what to include and
+what to expect.
 
 ## License
 
